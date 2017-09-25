@@ -11,8 +11,9 @@
 #define FOSC 4000000
 #define BAUD 9600
 #define DDR_SPI DDRB
+#define PORT_SPI PORTB
 #define DD_MOSI 5
-//#define DD_MISO 6
+#define DD_MISO 6
 #define DD_SCK 7
 #define DD_SS 4
 void UART_init (){
@@ -34,13 +35,19 @@ uint8_t UART_Read(){
 
 void SPI_MasterInit(void){
 /* Set MOSI and SCK output, all others input */
-DDR_SPI = (1<<DD_MOSI)|(1<<DD_SCK)|(1<<DD_SS) ;
+DDR_SPI =(1<<DD_SCK)|(1<<DD_SS) ;
 SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0); ///Enable SPI, Set as Master, clock rate fck/16 
+PORT_SPI &=~((1<<DD_MOSI)|(1<<DD_MISO)) ;
 }
-void SPI_MasterTransmit(char cData){
-SPDR = cData;/* Start transmission */
+char SPI_MasterReceive(void){
+	DDR_SPI |= (1<<DD_MOSI);
+	DDR_SPI &= ~(1<<DD_MISO);
+SPDR = 0;/* Start transmission */
 while(!(SPSR & (1<<SPIF)));// Wait for transmission to complete: When a serial transfer is complete, the SPIF Flag is set
+return SPDR;
 }
+
+
 
 int main(void){
 	int val;
@@ -60,11 +67,9 @@ int main(void){
 	  UART_Transmit(98);
 	  }
 	  PORTB &= ~(1<<4);
-	  SPI_MasterTransmit(0);
-	  val=SPDR<<5;
-	  SPI_MasterTransmit(0);
+	  val=SPI_MasterReceive()<<5;
+	  val=val | SPI_MasterReceive()>>3;
 	  PORTB |= 1<<4;
-	  val=val | SPDR>>3;
 	  UART_Transmit(val*0.0625);
     }
 }
