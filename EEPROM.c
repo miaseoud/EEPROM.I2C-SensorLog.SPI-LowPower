@@ -1,6 +1,10 @@
+/*-------------------------------------------------------------------------------------------------------------------------*/
+/*---------------------------------------------------------------I2C EEPROM------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------------*/
 #include "I2C_AVR.h"
 #include "EEPROM.h"
 #include <avr/io.h>
+//Writing to EEPROM return SUCCESS or ERROR according to the I2C Status bits.
 uint8_t WriteByte(uint8_t addr, uint8_t slot, uint8_t data) {
     I2C_Start();
   if (I2C_GetStatus() != 0x08)    //START
@@ -13,7 +17,7 @@ if (I2C_GetStatus() != 0x18)     //MT_SLA_ACK
        return ERROR;
     //write byte to eeprom
     I2C_Write(data);
-     if (I2C_GetStatus() != 0x28)
+     if (I2C_GetStatus() != 0x28) // //MT_DATA_ACK
       return ERROR;
     I2C_Stop();
     return SUCCESS;
